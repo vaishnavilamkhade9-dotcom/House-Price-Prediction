@@ -1,0 +1,342 @@
+# ============================================================
+# ACTIVITY 2: SIMPLE HOUSE PRICE PREDICTION
+# Unit II - Supervised Learning: Regression
+# Dataset: California Housing Dataset
+# Algorithm: Simple Linear Regression
+# ============================================================
+
+
+# STEP 1: IMPORT REQUIRED LIBRARIES
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import warnings
+
+from sklearn.datasets import fetch_california_housing
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import (
+    mean_absolute_error,
+    mean_squared_error,
+    r2_score
+)
+
+warnings.filterwarnings('ignore')
+
+print("All libraries imported successfully!")
+
+
+# STEP 2: LOAD THE DATASET
+
+housing = fetch_california_housing(as_frame=True)
+
+df = housing.frame.copy()
+
+print("\nDATASET LOADED SUCCESSFULLY!")
+
+# Display first five rows
+print("\nFirst 5 Rows:")
+display(df.head())
+
+# Display last five rows
+print("\nLast 5 Rows:")
+display(df.tail())
+
+# Dataset shape
+print("\nNumber of Rows:", df.shape[0])
+print("Number of Columns:", df.shape[1])
+
+# Column names
+print("\nColumn Names:")
+print(df.columns.tolist())
+
+
+# STEP 3: INSPECT DATASET STRUCTURE
+
+print("\nDATASET INFORMATION:")
+df.info()
+
+print("\nDATA TYPES:")
+print(df.dtypes)
+
+print("\nSTATISTICAL SUMMARY:")
+display(df.describe())
+
+# Check missing values
+print("\nMISSING VALUES:")
+print(df.isnull().sum())
+
+# Check duplicate records
+print("\nDUPLICATE ROWS:")
+print(df.duplicated().sum())
+
+# Target variable
+print("\nTARGET VARIABLE: MedHouseVal")
+
+print("\nTarget Summary:")
+print(df['MedHouseVal'].describe())
+
+
+# STEP 4: EXPLORATORY DATA ANALYSIS (EDA)
+
+# Histogram of house prices
+plt.figure(figsize=(8, 5))
+
+plt.hist(
+    df['MedHouseVal'],
+    bins=30,
+    edgecolor='black'
+)
+
+plt.title("Distribution of House Prices")
+plt.xlabel("Median House Value ($100,000)")
+plt.ylabel("Frequency")
+
+plt.show()
+
+
+# Scatter plot: Income vs House Price
+plt.figure(figsize=(8, 5))
+
+plt.scatter(
+    df['MedInc'],
+    df['MedHouseVal'],
+    alpha=0.3
+)
+
+plt.title("Median Income vs House Price")
+plt.xlabel("Median Income")
+plt.ylabel("Median House Value ($100,000)")
+
+plt.show()
+
+
+# Correlation heatmap
+plt.figure(figsize=(10, 7))
+
+sns.heatmap(
+    df.corr(),
+    annot=True,
+    cmap='coolwarm',
+    fmt='.2f'
+)
+
+plt.title("Correlation Heatmap of Housing Dataset")
+plt.show()
+
+
+# STEP 5: SELECT INPUT AND TARGET VARIABLES
+
+# Use Median Income as input feature
+# Use Median House Value as target
+
+X = df[['MedInc']]
+y = df['MedHouseVal']
+
+print("\nINPUT FEATURE:")
+print("MedInc - Median Income")
+
+print("\nTARGET VARIABLE:")
+print("MedHouseVal - Median House Value")
+
+print("\nInput Shape:", X.shape)
+print("Target Shape:", y.shape)
+
+
+# STEP 6: SPLIT DATA INTO TRAINING AND TESTING SETS
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42
+)
+
+print("\nDATA SPLIT SUCCESSFULLY!")
+
+print("Training Data:", X_train.shape[0])
+print("Testing Data:", X_test.shape[0])
+
+
+# STEP 7: TRAIN LINEAR REGRESSION MODEL
+
+model = LinearRegression()
+
+model.fit(X_train, y_train)
+
+print("\nLINEAR REGRESSION MODEL TRAINED SUCCESSFULLY!")
+
+# Display model coefficient and intercept
+print("\nCoefficient:", model.coef_[0])
+print("Intercept:", model.intercept_)
+
+print("\nRegression Equation:")
+print(
+    "House Price =",
+    round(model.intercept_, 4),
+    "+",
+    round(model.coef_[0], 4),
+    "* Median Income"
+)
+
+
+# STEP 8: MAKE PREDICTIONS
+
+y_pred = model.predict(X_test)
+
+print("\nHOUSE PRICE PREDICTIONS")
+
+prediction_results = pd.DataFrame({
+    'Actual House Price': y_test.values,
+    'Predicted House Price': y_pred
+})
+
+display(prediction_results.head(10))
+
+
+# STEP 9: EVALUATE THE MODEL
+
+mae = mean_absolute_error(y_test, y_pred)
+
+mse = mean_squared_error(y_test, y_pred)
+
+rmse = np.sqrt(mse)
+
+r2 = r2_score(y_test, y_pred)
+
+print("\nMODEL PERFORMANCE METRICS")
+
+print("Mean Absolute Error (MAE):", round(mae, 4))
+
+print("Mean Squared Error (MSE):", round(mse, 4))
+
+print("Root Mean Squared Error (RMSE):", round(rmse, 4))
+
+print("R2 Score:", round(r2, 4))
+
+print("R2 Score in Percentage:", round(r2 * 100, 2), "%")
+
+
+# STEP 10: VISUALIZE MODEL PERFORMANCE
+
+# Actual vs Predicted Values
+
+plt.figure(figsize=(8, 5))
+
+plt.scatter(
+    y_test,
+    y_pred,
+    alpha=0.3
+)
+
+# Perfect prediction reference line
+min_value = min(y_test.min(), y_pred.min())
+max_value = max(y_test.max(), y_pred.max())
+
+plt.plot(
+    [min_value, max_value],
+    [min_value, max_value],
+    'r--'
+)
+
+plt.title("Actual vs Predicted House Prices")
+plt.xlabel("Actual House Prices")
+plt.ylabel("Predicted House Prices")
+
+plt.show()
+
+
+# Regression Line
+
+plt.figure(figsize=(8, 5))
+
+plt.scatter(
+    X_test['MedInc'],
+    y_test,
+    alpha=0.2,
+    label='Actual Values'
+)
+
+sorted_indices = np.argsort(X_test['MedInc'].values)
+
+plt.plot(
+    X_test['MedInc'].values[sorted_indices],
+    y_pred[sorted_indices],
+    color='red',
+    linewidth=2,
+    label='Regression Line'
+)
+
+plt.title("Simple Linear Regression Line")
+plt.xlabel("Median Income")
+plt.ylabel("Median House Value")
+plt.legend()
+
+plt.show()
+
+
+# Residual Plot
+
+residuals = y_test.values - y_pred
+
+plt.figure(figsize=(8, 5))
+
+plt.scatter(
+    y_pred,
+    residuals,
+    alpha=0.3
+)
+
+plt.axhline(
+    y=0,
+    linestyle='--'
+)
+
+plt.title("Residual Plot")
+plt.xlabel("Predicted House Prices")
+plt.ylabel("Residuals")
+
+plt.show()
+
+
+# BONUS: PREDICT A HOUSE PRICE FOR A NEW INPUT
+
+new_income = pd.DataFrame({
+    'MedInc': [5.0]
+})
+
+predicted_price = model.predict(new_income)[0]
+
+print("\nNEW HOUSE PRICE PREDICTION")
+
+print("Median Income:", new_income['MedInc'][0])
+
+print(
+    "Predicted House Value:",
+    round(predicted_price, 4),
+    "($100,000 units)"
+)
+
+print(
+    "Approximate Predicted Price in Dollars:",
+    round(predicted_price * 100000, 2)
+)
+
+
+# SAVE PREDICTION RESULTS AS CSV
+
+prediction_results.to_csv(
+    "House_Price_Predictions.csv",
+    index=False
+)
+
+print("\nPrediction results saved successfully!")
+
+# Download CSV in Google Colab
+from google.colab import files
+
+files.download("House_Price_Predictions.csv")
+
+print("\nACTIVITY 2 COMPLETED SUCCESSFULLY!")
